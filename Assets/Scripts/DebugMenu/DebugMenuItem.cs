@@ -4,9 +4,7 @@ using UnityEngine.SceneManagement;
 
 namespace RCWorld.DebugMenu
 {
-    /// <summary>
-    /// Base type for a selectable debug menu item. Add a new item type by deriving from this class.
-    /// </summary>
+    // Base type for a selectable debug menu item. Add a new item type by deriving from this class.
     public abstract class DebugMenuItem
     {
         protected DebugMenuItem(string name)

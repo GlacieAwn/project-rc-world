@@ -2,9 +2,7 @@ using System;
 
 namespace RCWorld.DebugMenu
 {
-    /// <summary>
-    /// Input contract consumed by the debug menu. Implement this interface to use a different activation method.
-    /// </summary>
+    // Input contract consumed by the debug menu. Implement this interface to use a different activation method.
     public interface IDebugMenuInput : IDisposable
     {
         bool OpenClosePressedThisFrame { get; }

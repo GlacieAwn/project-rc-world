@@ -4,9 +4,7 @@ using UnityEngine.UI;
 
 namespace RCWorld.DebugMenu
 {
-    /// <summary>
-    /// Minimal uGUI presentation for the menu. It can be replaced without changing the registry or navigation code.
-    /// </summary>
+    // Minimal uGUI presentation for the menu. It can be replaced without changing the registry or navigation code.
     internal sealed class DebugMenuUI
     {
         private readonly GameObject rootObject;

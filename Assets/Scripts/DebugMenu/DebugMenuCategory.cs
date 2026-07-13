@@ -3,9 +3,7 @@ using System.Collections.Generic;
 
 namespace RCWorld.DebugMenu
 {
-    /// <summary>
-    /// A named container for debug items and child categories.
-    /// </summary>
+    // A named container for debug items and child categories.
     public sealed class DebugMenuCategory
     {
         private readonly List<DebugMenuCategory> childCategories = new List<DebugMenuCategory>();

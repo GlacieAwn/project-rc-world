@@ -2,9 +2,7 @@ using UnityEngine;
 
 namespace RCWorld.DebugMenu
 {
-    /// <summary>
-    /// Persistent runtime coordinator for debug-menu input, navigation, UI, pause state, and cursor state.
-    /// </summary>
+    // Persistent runtime coordinator for debug-menu input, navigation, UI, pause state, and cursor state.
     public sealed class DebugMenuManager : MonoBehaviour
     {
         private static DebugMenuManager instance;
@@ -19,9 +17,7 @@ namespace RCWorld.DebugMenu
         private CursorLockMode cursorLockModeBeforeOpening;
         private bool cursorWasVisibleBeforeOpening;
 
-        /// <summary>
-        /// Gets the persistent manager, creating it when it is first needed.
-        /// </summary>
+        // Gets the persistent manager, creating it when it is first needed.
         public static DebugMenuManager Instance
         {
             get
@@ -39,18 +35,14 @@ namespace RCWorld.DebugMenu
             if (instance == null) CreateInstance();
         }
 
-        /// <summary>
-        /// Sets whether the manager pauses gameplay and unlocks the cursor while open.
-        /// </summary>
+        // Sets whether the manager pauses gameplay and unlocks the cursor while open.
         public void ConfigureModalBehavior(bool pauseGameplay, bool unlockCursor)
         {
             pauseGameplayWhenOpen = pauseGameplay;
             unlockCursorWhenOpen = unlockCursor;
         }
 
-        /// <summary>
-        /// Replaces and disposes the active input source.
-        /// </summary>
+        // Replaces and disposes the active input source.
         public void SetInput(IDebugMenuInput newInput)
         {
             if (newInput == null) throw new System.ArgumentNullException(nameof(newInput));

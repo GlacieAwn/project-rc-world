@@ -2,9 +2,7 @@ using System;
 
 namespace RCWorld.DebugMenu
 {
-    /// <summary>
-    /// Stores the menu hierarchy independently from the menu presentation.
-    /// </summary>
+    // Stores the menu hierarchy independently from the menu presentation.
     public static class DebugMenuRegistry
     {
         private static readonly DebugMenuCategory rootCategory = new DebugMenuCategory("Debug Menu", null);

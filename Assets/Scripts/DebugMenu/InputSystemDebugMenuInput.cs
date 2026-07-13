@@ -2,9 +2,7 @@ using UnityEngine.InputSystem;
 
 namespace RCWorld.DebugMenu
 {
-    /// <summary>
-    /// Default Input System implementation. Bindings live here, outside of menu logic, and can be replaced with any <see cref="IDebugMenuInput"/> implementation.
-    /// </summary>
+    // Default Input System implementation. Bindings live here, outside of menu logic, and can be replaced with any IDebugMenuInput implementation.
     public sealed class InputSystemDebugMenuInput : IDebugMenuInput
     {
         private readonly InputAction openCloseAction;
@@ -15,9 +13,7 @@ namespace RCWorld.DebugMenu
         private readonly InputAction submitAction;
         private readonly InputAction backAction;
 
-        /// <summary>
-        /// Creates the development input profile. F1 opens the menu; arrows/WASD and gamepad controls navigate it.
-        /// </summary>
+        // Creates the development input profile. F1 opens the menu; arrows/WASD and gamepad controls navigate it.
         public InputSystemDebugMenuInput()
         {
             openCloseAction = CreateButtonAction("Debug Menu Open", "<Keyboard>/f1", "<Gamepad>/start");

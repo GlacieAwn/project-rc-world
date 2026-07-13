@@ -2,9 +2,7 @@ using System.Collections.Generic;
 
 namespace RCWorld.DebugMenu
 {
-    /// <summary>
-    /// Holds navigation state without depending on Unity UI components.
-    /// </summary>
+    // Holds navigation state without depending on Unity UI components.
     internal sealed class DebugMenuNavigation
     {
         public DebugMenuCategory CurrentCategory { get; private set; }
