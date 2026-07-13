@@ -5,9 +5,7 @@ using UnityEngine.SceneManagement;
 
 namespace RCWorld.SceneManagement
 {
-    /// <summary>
-    /// Persistent entry point for requested scene loads. Place one in the bootstrap scene.
-    /// </summary>
+    // Persistent entry point for requested scene loads. Place one in the bootstrap scene.
     public sealed class SceneLoader : MonoBehaviour, ISceneLoader
     {
         public static SceneLoader Instance { get; private set; }

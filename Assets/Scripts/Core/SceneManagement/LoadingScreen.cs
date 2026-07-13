@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace RCWorld.SceneManagement
 {
-    /// <summary>Optional UI view for SceneLoader. Assign only the controls your screen uses.</summary>
+    // Optional UI view for SceneLoader. Assign only the controls your screen uses.
     public sealed class LoadingScreen : MonoBehaviour
     {
         [SerializeField] private CanvasGroup canvasGroup;

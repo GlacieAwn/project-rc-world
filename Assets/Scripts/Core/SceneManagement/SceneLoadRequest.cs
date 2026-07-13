@@ -4,10 +4,8 @@ using UnityEngine.SceneManagement;
 
 namespace RCWorld.SceneManagement
 {
-    /// <summary>
-    /// A small, inspector-friendly description of a scene transition.
-    /// The scene name must be included in Build Settings.
-    /// </summary>
+    // A small, inspector-friendly description of a scene transition.
+    // The scene name must be included in Build Settings.
     [Serializable]
     public sealed class SceneLoadRequest
     {

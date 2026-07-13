@@ -1,5 +1,5 @@
 namespace RCWorld.Saving
 {
-    /// <summary>Marker interface for plain, serializable data stored by SaveService.</summary>
+    // Marker interface for plain, serializable data stored by SaveService.
     public interface ISaveData { }
 }

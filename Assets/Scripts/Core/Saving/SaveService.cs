@@ -4,10 +4,8 @@ using UnityEngine;
 
 namespace RCWorld.Saving
 {
-    /// <summary>
-    /// File-based storage for serializable data transfer objects. It intentionally has no
-    /// knowledge of scenes, vehicles, or other gameplay objects.
-    /// </summary>
+    // File-based storage for serializable data transfer objects. It intentionally has no
+    // knowledge of scenes, vehicles, or other gameplay objects.
     public sealed class SaveService : MonoBehaviour, ISaveService
     {
         public static SaveService Instance { get; private set; }

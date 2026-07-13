@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace RCWorld.SceneManagement
 {
-    /// <summary>Requests a configured scene transition after a delay or when invoked by another system.</summary>
+    // Requests a configured scene transition after a delay or when invoked by another system.
     public sealed class AutomaticSceneChange : MonoBehaviour
     {
         [SerializeField] private SceneLoadRequest sceneRequest;
