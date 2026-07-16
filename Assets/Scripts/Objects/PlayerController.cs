@@ -8,7 +8,17 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float acceleration = 8f;
     [SerializeField] private float deceleration = 12f;
     [SerializeField] private float maxSpeed = 20f;
+    [SerializeField] private float maxTurnSpeed = 80f;
+    [SerializeField] private float maxTurnAngle = 30f;
+    [SerializeField] private float maxLeanAngle = 8f;
+    [SerializeField] private float axleSpinMultiplier = 24f;
     [SerializeField] private TMP_Text debugText;
+
+    [Header("Object Assignment")]
+    [SerializeField] private Transform frontAxel;
+    [SerializeField] private Transform rearAxel;
+    [SerializeField] private GameObject car;
+
 
     private float currentSpeed;
     private bool isAccelerating;
@@ -16,6 +26,9 @@ public class PlayerController : MonoBehaviour
 
     private InputSystem_Actions input;
     private Rigidbody rb;
+    private float steering;
+    private float frontAxelSpinAngle;
+    private float rearAxelSpinAngle;
 
     private void Awake()
     {
@@ -51,6 +64,7 @@ public class PlayerController : MonoBehaviour
 
         isAccelerating = input.Player.Accelerate.IsPressed();
         isReversing = input.Player.Reverse.IsPressed();
+        steering = input.Player.Steer.ReadValue<float>();
 
         UpdateSpeed(isAccelerating, isReversing);
 
@@ -63,7 +77,8 @@ public class PlayerController : MonoBehaviour
             $"Angular: {rb.angularVelocity}\n" +
             $"Sleeping: {rb.IsSleeping()}" + 
             $"SignedSpeed: {signedSpeed}\n" +
-            "Terrain: N/A";
+            "Terrain: N/A\n" +
+            $"Steering: {steering}\n";
     }
 
     private void FixedUpdate()
@@ -91,7 +106,13 @@ public class PlayerController : MonoBehaviour
             {
                 rb.AddForce(-horizontalVelocity.normalized * deceleration, ForceMode.Force);
             }
+
+            else 
+            {
+                rb.linearVelocity = Vector3.zero;
+            }
         }
+        
 
         Vector3 currentVelocity = rb.linearVelocity;
         Vector3 horizontalCurrentVelocity = new Vector3(currentVelocity.x, 0f, currentVelocity.z);
@@ -106,6 +127,34 @@ public class PlayerController : MonoBehaviour
         }
 
         rb.linearVelocity = Vector3.ClampMagnitude(rb.linearVelocity, maxSpeed);
+
+        float speedMagnitude = horizontalCurrentVelocity.magnitude;
+
+        // Only rotate the vehicle body while it is actually moving.
+        if (horizontalCurrentVelocity.sqrMagnitude > 0.0001f)
+        {
+            transform.Rotate(0f, steering * maxTurnSpeed * Time.fixedDeltaTime, 0f);
+        }
+
+        // Lean into turns based on steering input and current speed.
+        float leanAngle = Mathf.Clamp(steering * speedMagnitude * 0.6f, -maxLeanAngle, maxLeanAngle);
+        Vector3 localRotation = car.transform.localEulerAngles;
+        car.transform.localRotation = Quaternion.Euler(0, 0, leanAngle);
+        car.transform.localEulerAngles = localRotation;
+
+        float steeringAngle = Mathf.Clamp(steering, -1f, 1f) * maxTurnAngle;
+
+        if (frontAxel != null)
+        {
+            frontAxelSpinAngle = Mathf.Repeat(frontAxelSpinAngle + speedMagnitude * axleSpinMultiplier * Time.fixedDeltaTime, 360f);
+            frontAxel.localRotation = Quaternion.Euler(frontAxelSpinAngle, steeringAngle, 0f);
+        }
+
+        if (rearAxel != null)
+        {
+            rearAxelSpinAngle = Mathf.Repeat(rearAxelSpinAngle + speedMagnitude * axleSpinMultiplier * Time.fixedDeltaTime, 360f);
+            rearAxel.localRotation = Quaternion.Euler(rearAxelSpinAngle, 0f, 0f);
+        }
 
     }
 
