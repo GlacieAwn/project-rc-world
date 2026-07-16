@@ -10,7 +10,6 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float maxSpeed = 20f;
     [SerializeField] private float maxTurnSpeed = 80f;
     [SerializeField] private float maxTurnAngle = 30f;
-    [SerializeField] private float maxLeanAngle = 8f;
     [SerializeField] private float axleSpinMultiplier = 24f;
     [SerializeField] private float steeringSmoothing = 8f;
     [SerializeField] private TMP_Text debugText;
@@ -18,7 +17,6 @@ public class PlayerController : MonoBehaviour
     [Header("Object Assignment")]
     [SerializeField] private Transform frontAxel;
     [SerializeField] private Transform rearAxel;
-    [SerializeField] private GameObject car;
 
 
     private float currentSpeed;
@@ -70,12 +68,36 @@ public class PlayerController : MonoBehaviour
 
         UpdateSpeed(isAccelerating, isReversing);
 
+        transform.position += transform.forward * currentSpeed * Time.deltaTime;
+
+        float speedMagnitude = Mathf.Abs(currentSpeed);
+
+        if (Mathf.Abs(currentSpeed) > 0.0001f)
+        {
+            transform.Rotate(0f, steering * maxTurnSpeed * Time.deltaTime, 0f);
+        }
+
+        float targetSteeringAngle = Mathf.Clamp(steering, -1f, 1f) * maxTurnAngle;
+        currentFrontAxelSteerAngle = Mathf.Lerp(currentFrontAxelSteerAngle, targetSteeringAngle, steeringSmoothing * Time.deltaTime);
+
+        if (frontAxel != null)
+        {
+            frontAxelSpinAngle = Mathf.Repeat(frontAxelSpinAngle + speedMagnitude * axleSpinMultiplier * Time.deltaTime, 360f);
+            frontAxel.localRotation = Quaternion.Euler(frontAxelSpinAngle, currentFrontAxelSteerAngle, 0f);
+        }
+
+        if (rearAxel != null)
+        {
+            rearAxelSpinAngle = Mathf.Repeat(rearAxelSpinAngle + speedMagnitude * axleSpinMultiplier * Time.deltaTime, 360f);
+            rearAxel.localRotation = Quaternion.Euler(rearAxelSpinAngle, 0f, 0f);
+        }
+
         debugText.text = 
             "RC Car Debug Values:\n" +
             $"\nRotation: {transform.eulerAngles}" +
             $"\nPosition: {transform.position}\n" +
             $"Velocity: {rb.linearVelocity}\n" +
-            $"Speed: {rb.linearVelocity.magnitude:F4}\n" +
+            $"Speed: {currentSpeed:F4}\n" +
             $"Angular: {rb.angularVelocity}\n" +
             $"Sleeping: {rb.IsSleeping()}" + 
             $"SignedSpeed: {signedSpeed}\n" +
@@ -90,30 +112,30 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        Vector3 movementDirection = GetMovementDirection();
+        // Vector3 movementDirection = GetMovementDirection();
 
-        if (isAccelerating && !isReversing)
-        {
-            rb.AddForce(movementDirection * acceleration, ForceMode.Force);
-        }
-        else if (isReversing && !isAccelerating)
-        {
-            rb.AddForce(-movementDirection * acceleration, ForceMode.Force);
-        }
-        else
-        {
-            Vector3 velocity = rb.linearVelocity;
-            Vector3 horizontalVelocity = new Vector3(velocity.x, 0f, velocity.z);
-            if (horizontalVelocity.sqrMagnitude > 0.0001f)
-            {
-                rb.AddForce(-horizontalVelocity.normalized * deceleration, ForceMode.Force);
-            }
+        // if (isAccelerating && !isReversing)
+        // {
+        //     rb.AddForce(movementDirection * acceleration, ForceMode.Force);
+        // }
+        // else if (isReversing && !isAccelerating)
+        // {
+        //     rb.AddForce(-movementDirection * acceleration, ForceMode.Force);
+        // }
+        // else
+        // {
+        //     Vector3 velocity = rb.linearVelocity;
+        //     Vector3 horizontalVelocity = new Vector3(velocity.x, 0f, velocity.z);
+        //     if (horizontalVelocity.sqrMagnitude > 0.0001f)
+        //     {
+        //         rb.AddForce(-horizontalVelocity.normalized * deceleration, ForceMode.Force);
+        //     }
 
-            else 
-            {
-                rb.linearVelocity = Vector3.zero;
-            }
-        }
+        //     else 
+        //     {
+        //         rb.linearVelocity = Vector3.zero;
+        //     }
+        // }
         
 
         Vector3 currentVelocity = rb.linearVelocity;
@@ -129,36 +151,6 @@ public class PlayerController : MonoBehaviour
         }
 
         rb.linearVelocity = Vector3.ClampMagnitude(rb.linearVelocity, maxSpeed);
-
-        float speedMagnitude = horizontalCurrentVelocity.magnitude;
-
-        // Only rotate the vehicle body while it is actually moving.
-        if (horizontalCurrentVelocity.sqrMagnitude > 0.0001f)
-        {
-            transform.Rotate(0f, steering * maxTurnSpeed * Time.fixedDeltaTime, 0f);
-        }
-
-        // Lean into turns based on steering input and current speed.
-        float leanAngle = Mathf.Clamp(steering * speedMagnitude * 0.6f, -maxLeanAngle, maxLeanAngle);
-        if (car != null)
-        {
-            car.transform.localRotation = Quaternion.Euler(0f, 0f, leanAngle);
-        }
-
-        float targetSteeringAngle = Mathf.Clamp(steering, -1f, 1f) * maxTurnAngle;
-        currentFrontAxelSteerAngle = Mathf.Lerp(currentFrontAxelSteerAngle, targetSteeringAngle, steeringSmoothing * Time.fixedDeltaTime);
-
-        if (frontAxel != null)
-        {
-            frontAxelSpinAngle = Mathf.Repeat(frontAxelSpinAngle + speedMagnitude * axleSpinMultiplier * Time.fixedDeltaTime, 360f);
-            frontAxel.localRotation = Quaternion.Euler(frontAxelSpinAngle, currentFrontAxelSteerAngle, 0f);
-        }
-
-        if (rearAxel != null)
-        {
-            rearAxelSpinAngle = Mathf.Repeat(rearAxelSpinAngle + speedMagnitude * axleSpinMultiplier * Time.fixedDeltaTime, 360f);
-            rearAxel.localRotation = Quaternion.Euler(rearAxelSpinAngle, 0f, 0f);
-        }
 
     }
 
@@ -177,7 +169,7 @@ public class PlayerController : MonoBehaviour
         else if (reversing && !accelerating)
             currentSpeed -= acceleration * Time.deltaTime;
         else
-            currentSpeed -= deceleration * Time.deltaTime;
+            currentSpeed = Mathf.MoveTowards(currentSpeed, 0f, deceleration * Time.deltaTime);
 
         currentSpeed = Mathf.Clamp(currentSpeed, -maxSpeed, maxSpeed);
     }
