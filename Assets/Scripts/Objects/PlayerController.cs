@@ -12,6 +12,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float maxTurnAngle = 30f;
     [SerializeField] private float maxLeanAngle = 8f;
     [SerializeField] private float axleSpinMultiplier = 24f;
+    [SerializeField] private float steeringSmoothing = 8f;
     [SerializeField] private TMP_Text debugText;
 
     [Header("Object Assignment")]
@@ -29,6 +30,7 @@ public class PlayerController : MonoBehaviour
     private float steering;
     private float frontAxelSpinAngle;
     private float rearAxelSpinAngle;
+    private float currentFrontAxelSteerAngle;
 
     private void Awake()
     {
@@ -138,16 +140,18 @@ public class PlayerController : MonoBehaviour
 
         // Lean into turns based on steering input and current speed.
         float leanAngle = Mathf.Clamp(steering * speedMagnitude * 0.6f, -maxLeanAngle, maxLeanAngle);
-        Vector3 localRotation = car.transform.localEulerAngles;
-        car.transform.localRotation = Quaternion.Euler(0, 0, leanAngle);
-        car.transform.localEulerAngles = localRotation;
+        if (car != null)
+        {
+            car.transform.localRotation = Quaternion.Euler(0f, 0f, leanAngle);
+        }
 
-        float steeringAngle = Mathf.Clamp(steering, -1f, 1f) * maxTurnAngle;
+        float targetSteeringAngle = Mathf.Clamp(steering, -1f, 1f) * maxTurnAngle;
+        currentFrontAxelSteerAngle = Mathf.Lerp(currentFrontAxelSteerAngle, targetSteeringAngle, steeringSmoothing * Time.fixedDeltaTime);
 
         if (frontAxel != null)
         {
             frontAxelSpinAngle = Mathf.Repeat(frontAxelSpinAngle + speedMagnitude * axleSpinMultiplier * Time.fixedDeltaTime, 360f);
-            frontAxel.localRotation = Quaternion.Euler(frontAxelSpinAngle, steeringAngle, 0f);
+            frontAxel.localRotation = Quaternion.Euler(frontAxelSpinAngle, currentFrontAxelSteerAngle, 0f);
         }
 
         if (rearAxel != null)
