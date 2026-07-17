@@ -12,6 +12,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float maxTurnAngle = 30f;
     [SerializeField] private float axleSpinMultiplier = 24f;
     [SerializeField] private float steeringSmoothing = 8f;
+    [SerializeField] [Range(0f, 1f)] private float steeringCurveStart = 0.25f;
+    [SerializeField] [Range(0f, 1f)] private float steeringCurveEnd = 0.8f;
     [SerializeField] private TMP_Text debugText;
 
     [Header("Object Assignment")]
@@ -71,24 +73,41 @@ public class PlayerController : MonoBehaviour
         transform.position += transform.forward * currentSpeed * Time.deltaTime;
 
         float speedMagnitude = Mathf.Abs(currentSpeed);
-
-        if (Mathf.Abs(currentSpeed) > 0.0001f)
-        {
-            transform.Rotate(0f, steering * maxTurnSpeed * Time.deltaTime, 0f);
-        }
-
         float targetSteeringAngle = Mathf.Clamp(steering, -1f, 1f) * maxTurnAngle;
         currentFrontAxelSteerAngle = Mathf.Lerp(currentFrontAxelSteerAngle, targetSteeringAngle, steeringSmoothing * Time.deltaTime);
 
+        float steeringPercent = currentFrontAxelSteerAngle / maxTurnAngle;
+        float speedRatio = maxSpeed > 0f ? Mathf.Clamp01(speedMagnitude / maxSpeed) : 0f;
+
+        float steeringAuthority = 1f;
+        if (speedRatio < steeringCurveStart)
+        {
+            steeringAuthority = Mathf.Lerp(0f, 1f, speedRatio / steeringCurveStart);
+        }
+        else if (speedRatio > steeringCurveEnd)
+        {
+            steeringAuthority = Mathf.Lerp(1f, 0f, (speedRatio - steeringCurveEnd) / (3f - steeringCurveEnd));
+        }
+
+        float steeringDirection = currentSpeed >= 0f ? 1f : -1f;
+        float steeringTurn = steeringPercent * steeringAuthority * steeringDirection;
+
+        if (speedMagnitude > 0.0001f)
+        {
+            transform.Rotate(0f, steeringTurn * maxTurnSpeed * Time.deltaTime, 0f);
+        }
+
+        float spinDirection = currentSpeed >= 0f ? 1f : -1f;
+
         if (frontAxel != null)
         {
-            frontAxelSpinAngle = Mathf.Repeat(frontAxelSpinAngle + speedMagnitude * axleSpinMultiplier * Time.deltaTime, 360f);
+            frontAxelSpinAngle = Mathf.Repeat(frontAxelSpinAngle + spinDirection * speedMagnitude * axleSpinMultiplier * Time.deltaTime, 360f);
             frontAxel.localRotation = Quaternion.Euler(frontAxelSpinAngle, currentFrontAxelSteerAngle, 0f);
         }
 
         if (rearAxel != null)
         {
-            rearAxelSpinAngle = Mathf.Repeat(rearAxelSpinAngle + speedMagnitude * axleSpinMultiplier * Time.deltaTime, 360f);
+            rearAxelSpinAngle = Mathf.Repeat(rearAxelSpinAngle + spinDirection * speedMagnitude * axleSpinMultiplier * Time.deltaTime, 360f);
             rearAxel.localRotation = Quaternion.Euler(rearAxelSpinAngle, 0f, 0f);
         }
 
