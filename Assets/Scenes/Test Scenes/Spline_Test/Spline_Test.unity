@@ -372,7 +372,7 @@ MonoBehaviour:
     m_DataPoints: []
   m_Spline: {fileID: 101084297}
   m_SegmentsPerMeter: 1000
-  m_Mesh: {fileID: 1550318584}
+  m_Mesh: {fileID: 1714116247}
   m_TextureScale: 1
 --- !u!33 &101084300
 MeshFilter:
@@ -381,7 +381,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 101084296}
-  m_Mesh: {fileID: 1550318584}
+  m_Mesh: {fileID: 1714116247}
 --- !u!23 &101084301
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -750,6 +750,69 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &389437636
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 389437638}
+  - component: {fileID: 389437637}
+  m_Layer: 0
+  m_Name: BGM_CIRCUIT Emitter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &389437637
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 389437636}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a6610d2e704f1648819acc8d7460285, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FMODUnity::FMODUnity.StudioEventEmitter
+  CollisionTag: 
+  EventReference:
+    Guid:
+      Data1: -494046167
+      Data2: 1267760465
+      Data3: -88129904
+      Data4: 732837813
+    Path: event:/Music/BGM_CIRCUIT
+  Event: 
+  EventPlayTrigger: 1
+  EventStopTrigger: 2
+  AllowFadeout: 1
+  TriggerOnce: 0
+  Preload: 0
+  NonRigidbodyVelocity: 0
+  Params: []
+  OverrideAttenuation: 0
+  OverrideMinDistance: 1
+  OverrideMaxDistance: 20
+--- !u!4 &389437638
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 389437636}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &528334173
 GameObject:
   m_ObjectHideFlags: 0
@@ -782,69 +845,6 @@ Transform:
   - {fileID: 1693999390976741016}
   - {fileID: 8458674802478649925}
   m_Father: {fileID: 543450651638219576}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &607184704
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 607184706}
-  - component: {fileID: 607184705}
-  m_Layer: 0
-  m_Name: BGM_TEST Emitter
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &607184705
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 607184704}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9a6610d2e704f1648819acc8d7460285, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FMODUnity::FMODUnity.StudioEventEmitter
-  CollisionTag: 
-  EventReference:
-    Guid:
-      Data1: -494046167
-      Data2: 1267760465
-      Data3: -88129904
-      Data4: 732837813
-    Path: event:/Music/BGM_TEST
-  Event: 
-  EventPlayTrigger: 1
-  EventStopTrigger: 2
-  AllowFadeout: 1
-  TriggerOnce: 0
-  Preload: 0
-  NonRigidbodyVelocity: 0
-  Params: []
-  OverrideAttenuation: 0
-  OverrideMinDistance: 1
-  OverrideMaxDistance: 20
---- !u!4 &607184706
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 607184704}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.99116, y: 0.99116, z: 0.99116}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1092810192
 GameObject:
@@ -1061,7 +1061,7 @@ Transform:
   m_GameObject: {fileID: 1473257274}
   serializedVersion: 2
   m_LocalRotation: {x: 0.21558921, y: 0.0006407797, z: -0.00014106928, w: 0.97648394}
-  m_LocalPosition: {x: -0.15958405, y: 6.10488, z: -5.67659}
+  m_LocalPosition: {x: -0.15958405, y: 6.10488, z: -7.1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1125,7 +1125,7 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
---- !u!43 &1550318584
+--- !u!43 &1714116247
 Mesh:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1399,14 +1399,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 055f68681f02949bb9323dedd93b1159, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController2D
-  acceleration: 100
-  deceleration: 150
-  maxSpeed: 50
-  maxTurnSpeed: 60
-  maxTurnAngle: 30
+  acceleration: 50
+  deceleration: 40
+  maxSpeed: 70
+  maxTurnSpeed: 70
+  maxTurnAngle: 15
+  axleSpinMultiplier: 100
+  steeringSmoothing: 20
+  steeringCurveStart: 0.192
+  steeringCurveEnd: 0.832
   debugText: {fileID: 1976483074}
-  frontAxel: {fileID: 0}
-  rearAxel: {fileID: 0}
+  frontAxel: {fileID: 528334174}
+  rearAxel: {fileID: 1092810193}
 --- !u!1 &1976483072
 GameObject:
   m_ObjectHideFlags: 0
@@ -1693,7 +1697,7 @@ Transform:
   m_GameObject: {fileID: 919132147903207810}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.0004196167, y: 0.079, z: 0.76}
+  m_LocalPosition: {x: 0.0004196167, y: 0.079, z: -0.07}
   m_LocalScale: {x: 1.2, y: 1.2, z: 1.2}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -2173,10 +2177,10 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 210167745}
-  - {fileID: 607184706}
   - {fileID: 101084298}
   - {fileID: 1996324913}
   - {fileID: 1333723215}
   - {fileID: 269441841}
   - {fileID: 308077408}
   - {fileID: 1731565484}
+  - {fileID: 389437638}

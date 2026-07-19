@@ -14,6 +14,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float steeringSmoothing = 8f;
     [SerializeField] [Range(0f, 1f)] private float steeringCurveStart = 0.25f;
     [SerializeField] [Range(0f, 1f)] private float steeringCurveEnd = 0.8f;
+    [SerializeField] [Range(0f, 1f)] private float grip = 0.8f;
+    [SerializeField] private float maxGrip = 8f;
     [SerializeField] private TMP_Text debugText;
 
     [Header("Object Assignment")]
@@ -31,6 +33,7 @@ public class PlayerController : MonoBehaviour
     private float frontAxelSpinAngle;
     private float rearAxelSpinAngle;
     private float currentFrontAxelSteerAngle;
+    private Vector3 velocityDirection;
 
     private void Awake()
     {
@@ -70,7 +73,14 @@ public class PlayerController : MonoBehaviour
 
         UpdateSpeed(isAccelerating, isReversing);
 
-        transform.position += transform.forward * currentSpeed * Time.deltaTime;
+        if (velocityDirection == Vector3.zero)
+            velocityDirection = transform.forward;
+
+        float gripRate = grip * maxGrip;
+        velocityDirection = Vector3.Slerp(velocityDirection, transform.forward, gripRate * Time.deltaTime);
+
+        transform.position += velocityDirection * currentSpeed * Time.deltaTime;
+
 
         float speedMagnitude = Mathf.Abs(currentSpeed);
         float targetSteeringAngle = Mathf.Clamp(steering, -1f, 1f) * maxTurnAngle;
@@ -122,6 +132,7 @@ public class PlayerController : MonoBehaviour
             $"SignedSpeed: {signedSpeed}\n" +
             "Terrain: N/A\n" +
             $"Steering: {steering}\n";
+
     }
 
     private void FixedUpdate()
