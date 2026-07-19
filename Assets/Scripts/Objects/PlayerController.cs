@@ -34,6 +34,13 @@ public class PlayerController : MonoBehaviour
     private float rearAxelSpinAngle;
     private float currentFrontAxelSteerAngle;
     private Vector3 velocityDirection;
+    private DRIFT_STATE currentDriftState;
+
+    enum DRIFT_STATE {
+        None,
+        Holding,
+        Released
+    };
 
     private void Awake()
     {
@@ -61,6 +68,19 @@ public class PlayerController : MonoBehaviour
     {
         Vector3 movementDirection = GetMovementDirection();
         float signedSpeed = Vector3.Dot(rb.linearVelocity, movementDirection);
+
+        debugText.text = 
+            "RC Car Debug Values:\n" +
+            $"\nRotation: {transform.eulerAngles}" +
+            $"\nPosition: {transform.position}\n" +
+            $"Velocity: {rb.linearVelocity}\n" +
+            $"Speed: {currentSpeed:F4}\n" +
+            $"Angular: {rb.angularVelocity}\n" +
+            $"Sleeping: {rb.IsSleeping()}" + 
+            $"SignedSpeed: {signedSpeed}\n" +
+            "Terrain: N/A\n" +
+            $"Steering: {steering}\n";
+
 
         if (input == null)
         {
@@ -121,17 +141,20 @@ public class PlayerController : MonoBehaviour
             rearAxel.localRotation = Quaternion.Euler(rearAxelSpinAngle, 0f, 0f);
         }
 
-        debugText.text = 
-            "RC Car Debug Values:\n" +
-            $"\nRotation: {transform.eulerAngles}" +
-            $"\nPosition: {transform.position}\n" +
-            $"Velocity: {rb.linearVelocity}\n" +
-            $"Speed: {currentSpeed:F4}\n" +
-            $"Angular: {rb.angularVelocity}\n" +
-            $"Sleeping: {rb.IsSleeping()}" + 
-            $"SignedSpeed: {signedSpeed}\n" +
-            "Terrain: N/A\n" +
-            $"Steering: {steering}\n";
+        switch (currentDriftState)
+        {
+            case DRIFT_STATE.None:
+                // TODO: Set up normal state, including setting grip, default car rotation, etc.
+                break;
+            case DRIFT_STATE.Holding:
+                // TODO: Set up holding(currently drifting) state including reducing grip, and rotating car
+                break;
+            case DRIFT_STATE.Released:
+                // TODO: Set up released state, including resetting grip and resetting car rotation to default
+                break;
+            default:
+                break;
+        }
 
     }
 
