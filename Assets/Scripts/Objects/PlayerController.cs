@@ -17,11 +17,18 @@ public class PlayerController : MonoBehaviour
     [SerializeField] [Range(0f, 1f)] private float grip = 0.8f;
     [SerializeField] private float maxGrip = 8f;
     [SerializeField] private TMP_Text debugText;
+    [SerializeField] private float driftStartSpeed = 5f;
+    [SerializeField] private float driftSteeringStrength = 0.4f;
+    [SerializeField] private float driftAngleMultiplier = 2f;
+    [SerializeField] private float driftCounterSteerReduction = 0.5f;
+    [SerializeField] private float driftGripReduction = 0.35f;
 
     [Header("Object Assignment")]
     [SerializeField] private Transform frontAxel;
     [SerializeField] private Transform rearAxel;
-
+    [SerializeField] private Transform car;
+    [SerializeField] private float carRotationLerpSpeed = 8f;
+    [SerializeField] private float carRotationMaxAngle = 30f;
 
     private float currentSpeed;
     private bool isAccelerating;
@@ -33,6 +40,11 @@ public class PlayerController : MonoBehaviour
     private float frontAxelSpinAngle;
     private float rearAxelSpinAngle;
     private float currentFrontAxelSteerAngle;
+    private float driftDirection;
+    private float driftChargeTime;
+    private float currentCarRotationAngle;
+    private float targetCarRotationAngle;
+    private Quaternion carBaseLocalRotation = Quaternion.identity;
     private Vector3 velocityDirection;
     private DRIFT_STATE currentDriftState;
 
@@ -46,6 +58,11 @@ public class PlayerController : MonoBehaviour
     {
         input = new InputSystem_Actions();
         rb = GetComponent<Rigidbody>();
+
+        if (car != null)
+        {
+            carBaseLocalRotation = car.localRotation;
+        }
     }
 
     private void OnEnable()
@@ -90,6 +107,7 @@ public class PlayerController : MonoBehaviour
         isAccelerating = input.Player.Accelerate.IsPressed();
         isReversing = input.Player.Reverse.IsPressed();
         steering = input.Player.Steer.ReadValue<float>();
+        bool driftInputHeld = input.Player.Drift.IsPressed();
 
         UpdateSpeed(isAccelerating, isReversing);
 
@@ -122,6 +140,14 @@ public class PlayerController : MonoBehaviour
         float steeringDirection = currentSpeed >= 0f ? 1f : -1f;
         float steeringTurn = steeringPercent * steeringAuthority * steeringDirection;
 
+        if (currentDriftState == DRIFT_STATE.Holding)
+        {
+            float driftSteeringAmount = Mathf.Clamp01(Mathf.Abs(steering));
+            float driftSteeringSign = Mathf.Abs(steering) > 0.001f ? Mathf.Sign(steering) : 0f;
+            float driftInfluence = driftSteeringSign == driftDirection ? driftSteeringAmount : -driftSteeringAmount * driftCounterSteerReduction;
+            steeringTurn = steeringDirection * Mathf.Clamp01(driftInfluence * driftSteeringStrength * steeringAuthority);
+        }
+
         if (speedMagnitude > 0.0001f)
         {
             transform.Rotate(0f, steeringTurn * maxTurnSpeed * Time.deltaTime, 0f);
@@ -144,17 +170,59 @@ public class PlayerController : MonoBehaviour
         switch (currentDriftState)
         {
             case DRIFT_STATE.None:
-                // TODO: Set up normal state, including setting grip, default car rotation, etc.
+                if (driftInputHeld && Mathf.Abs(steering) > 0.1f && Mathf.Abs(currentSpeed) > driftStartSpeed)
+                {
+                    driftDirection = Mathf.Sign(steering);
+                    driftChargeTime = 0f;
+                    targetCarRotationAngle = 0f;
+                    currentDriftState = DRIFT_STATE.Holding;
+                }
                 break;
             case DRIFT_STATE.Holding:
-                // TODO: Set up holding(currently drifting) state including reducing grip, and rotating car
+                driftChargeTime += Time.deltaTime;
+
+                float gripScale = Mathf.Lerp(1f, 1.35f, Mathf.Clamp01(driftGripReduction));
+                float driftAngleTarget = currentCarRotationAngle;
+
+                if (Mathf.Abs(steering) > 0.001f)
+                {
+                    float steeringSign = Mathf.Sign(steering);
+                    float steeringMagnitude = Mathf.Abs(steering);
+                    float maxDriftAngle = carRotationMaxAngle * driftAngleMultiplier * gripScale; 
+
+                    if (steeringSign == driftDirection)
+                    {
+                        float sameDirectionAngle = Mathf.Clamp(steeringMagnitude * maxDriftAngle, 0f, maxDriftAngle);
+                        driftAngleTarget = Mathf.Max(Mathf.Abs(currentCarRotationAngle), sameDirectionAngle) * driftDirection;
+                    }
+                    else
+                    {
+                        float counterSteerAmount = Mathf.Clamp01(steeringMagnitude * driftCounterSteerReduction);
+                        float reducedMagnitude = Mathf.Max(Mathf.Abs(currentCarRotationAngle) * (1f - counterSteerAmount), 0f);
+                        float oppositeClamp = Mathf.Max(carRotationMaxAngle * 0.15f * counterSteerAmount, 0.25f);
+                        driftAngleTarget = (reducedMagnitude > 0.0001f ? Mathf.Sign(currentCarRotationAngle) : driftDirection) * Mathf.Max(reducedMagnitude, oppositeClamp);
+                    }
+                }
+
+                targetCarRotationAngle = Mathf.Lerp(targetCarRotationAngle, driftAngleTarget, carRotationLerpSpeed * Time.deltaTime);
+
+                if (!driftInputHeld)
+                {
+                    currentDriftState = DRIFT_STATE.Released;
+                }
                 break;
             case DRIFT_STATE.Released:
-                // TODO: Set up released state, including resetting grip and resetting car rotation to default
+                targetCarRotationAngle = 0f;
+                // TODO: boost hook - use driftChargeTime to determine boost tier once the boost system exists.
+                driftChargeTime = 0f;
+                driftDirection = 0f;
+                currentDriftState = DRIFT_STATE.None;
                 break;
             default:
                 break;
         }
+
+        ApplyCarRotation();
 
     }
 
@@ -205,6 +273,17 @@ public class PlayerController : MonoBehaviour
 
         rb.linearVelocity = Vector3.ClampMagnitude(rb.linearVelocity, maxSpeed);
 
+    }
+
+    private void ApplyCarRotation()
+    {
+        if (car == null)
+        {
+            return;
+        }
+
+        currentCarRotationAngle = Mathf.Lerp(currentCarRotationAngle, targetCarRotationAngle, carRotationLerpSpeed * Time.deltaTime);
+        car.localRotation = carBaseLocalRotation * Quaternion.Euler(0f, currentCarRotationAngle, 0f);
     }
 
     private Vector3 GetMovementDirection()
