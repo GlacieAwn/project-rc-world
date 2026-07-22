@@ -96,7 +96,8 @@ public class PlayerController : MonoBehaviour
             $"Sleeping: {rb.IsSleeping()}" + 
             $"SignedSpeed: {signedSpeed}\n" +
             "Terrain: N/A\n" +
-            $"Steering: {steering}\n";
+            $"Steering: {steering}\n" +
+            $"Current Drift State: {currentDriftState}";
 
 
         if (input == null)
@@ -145,7 +146,7 @@ public class PlayerController : MonoBehaviour
             float driftSteeringAmount = Mathf.Clamp01(Mathf.Abs(steering));
             float driftSteeringSign = Mathf.Abs(steering) > 0.001f ? Mathf.Sign(steering) : 0f;
             float driftInfluence = driftSteeringSign == driftDirection ? driftSteeringAmount : -driftSteeringAmount * driftCounterSteerReduction;
-            steeringTurn = steeringDirection * Mathf.Clamp01(driftInfluence * driftSteeringStrength * steeringAuthority);
+            steeringTurn = driftDirection * Mathf.Clamp01(driftInfluence * driftSteeringStrength * steeringAuthority);
         }
 
         if (speedMagnitude > 0.0001f)
@@ -212,6 +213,7 @@ public class PlayerController : MonoBehaviour
                 }
                 break;
             case DRIFT_STATE.Released:
+                Debug.Log("Released!");
                 targetCarRotationAngle = 0f;
                 // TODO: boost hook - use driftChargeTime to determine boost tier once the boost system exists.
                 driftChargeTime = 0f;
@@ -268,7 +270,7 @@ public class PlayerController : MonoBehaviour
             currentVelocity.x = 0f;
             currentVelocity.z = 0f;
             rb.linearVelocity = currentVelocity;
-            Debug.Log(rb.linearVelocity);
+            // Debug.Log(rb.linearVelocity);
         }
 
         rb.linearVelocity = Vector3.ClampMagnitude(rb.linearVelocity, maxSpeed);
