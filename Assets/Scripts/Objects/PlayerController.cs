@@ -31,6 +31,17 @@ public class PlayerController : MonoBehaviour
     [Header("Boost Trigger")]
     [SerializeField] private string cornerTriggerTag = "Corner";
 
+    [Header("Vehicle Heat")]
+    [SerializeField] private float maxHeat = 100f;
+    [SerializeField] private float currentHeat;
+    [SerializeField] private float heatGeneration = 5f;
+    [SerializeField] private float passiveCooling = 2f;
+    [SerializeField] private float accelerationHeatModifier = 1f;
+    [SerializeField] private float driftHeatModifier = 1f;
+    [SerializeField] private float boostHeatModifier = 1f;
+    [SerializeField] private float decelerationCoolingModifier = 1f;
+    [SerializeField] private bool overheated;
+
     [Header("Object Assignment")]
     [SerializeField] private Transform frontAxel;
     [SerializeField] private Transform rearAxel;
@@ -168,6 +179,49 @@ public class PlayerController : MonoBehaviour
         boostRoutine = null;
     }
 
+    public event System.Action OnOverheated;
+    public event System.Action OnRecoveredFromOverheat;
+
+    public void AddHeat(float amount = 0f)
+    {
+        // Gameplay systems can call this with any tuned value later without changing the heat logic.
+        float heatToAdd = amount > 0f ? amount : heatGeneration;
+        currentHeat = Mathf.Clamp(currentHeat + heatToAdd, 0f, maxHeat);
+        UpdateOverheatedState();
+    }
+
+    public void CoolHeat(float amount = 0f)
+    {
+        // Gameplay systems can call this with any tuned value later without changing the heat logic.
+        float heatToRemove = amount > 0f ? amount : passiveCooling;
+        currentHeat = Mathf.Clamp(currentHeat - heatToRemove, 0f, maxHeat);
+        UpdateOverheatedState();
+    }
+
+    public bool IsOverheated()
+    {
+        return overheated;
+    }
+
+    private void UpdateOverheatedState()
+    {
+        bool nextOverheated = currentHeat >= maxHeat;
+        if (overheated != nextOverheated)
+        {
+            overheated = nextOverheated;
+
+            if (overheated)
+            {
+                // TODO: apply the overheat gameplay effect here.
+                OnOverheated?.Invoke();
+            }
+            else
+            {
+                OnRecoveredFromOverheat?.Invoke();
+            }
+        }
+    }
+
     private void Update()
     {
         Vector3 movementDirection = GetMovementDirection();
@@ -184,7 +238,9 @@ public class PlayerController : MonoBehaviour
             $"SignedSpeed: {signedSpeed}\n" +
             "Terrain: N/A\n" +
             $"Steering: {steering}\n" +
-            $"Current Drift State: {currentDriftState}";
+            $"Current Drift State: {currentDriftState}\n" + 
+            $"Heat: {currentHeat}\n" +
+            $"Overheated: {overheated}\n";
 
 
         if (input == null)
@@ -205,6 +261,8 @@ public class PlayerController : MonoBehaviour
         previousDriftInputHeld = driftInputHeld;
 
         UpdateSpeed(isAccelerating, isReversing);
+        ApplyHeatFromInputs(isAccelerating, isReversing);
+        ApplyCoolingFromInputs(isAccelerating, isReversing);
 
         if (velocityDirection == Vector3.zero)
             velocityDirection = transform.forward;
@@ -413,6 +471,34 @@ public class PlayerController : MonoBehaviour
         direction.y = 0f;
 
         return direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
+    }
+
+    private void ApplyHeatFromInputs(bool accelerating, bool reversing)
+    {
+        if (accelerating && !reversing)
+        {
+            AddHeat(heatGeneration * accelerationHeatModifier);
+        }
+
+        if (currentDriftState == DRIFT_STATE.Holding)
+        {
+            AddHeat(heatGeneration * driftHeatModifier);
+        }
+
+        if (boostActive)
+        {
+            AddHeat(heatGeneration * boostHeatModifier);
+        }
+    }
+
+    private void ApplyCoolingFromInputs(bool accelerating, bool reversing)
+    {
+        bool isDecelerating = (!accelerating && reversing) || (accelerating && reversing) || (!accelerating && !reversing && Mathf.Abs(currentSpeed) > 0.0001f);
+
+        if (isDecelerating)
+        {
+            CoolHeat(passiveCooling * decelerationCoolingModifier);
+        }
     }
 
     private void UpdateSpeed(bool accelerating, bool reversing)
