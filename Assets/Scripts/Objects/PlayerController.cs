@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -7,7 +8,11 @@ public class PlayerController : MonoBehaviour
     [Header("Movement")]
     [SerializeField] private float acceleration = 8f;
     [SerializeField] private float deceleration = 12f;
-    [SerializeField] private float maxSpeed = 20f;
+    [SerializeField] private float normalSpeed = 20f;
+    [SerializeField] private float boostSpeed = 30f;
+    [SerializeField] private float rampUpTime = 0.3f;
+    [SerializeField] private float boostHoldTime = 0.6f;
+    [SerializeField] private float rampDownTime = 0.3f;
     [SerializeField] private float maxTurnSpeed = 80f;
     [SerializeField] private float maxTurnAngle = 30f;
     [SerializeField] private float axleSpinMultiplier = 24f;
@@ -23,6 +28,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float driftCounterSteerReduction = 0.5f;
     [SerializeField] private float driftGripReduction = 0.35f;
 
+    [Header("Boost Trigger")]
+    [SerializeField] private string cornerTriggerTag = "Corner";
+
     [Header("Object Assignment")]
     [SerializeField] private Transform frontAxel;
     [SerializeField] private Transform rearAxel;
@@ -31,8 +39,14 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float carRotationMaxAngle = 30f;
 
     private float currentSpeed;
+    private float currentMaxSpeed;
     private bool isAccelerating;
     private bool isReversing;
+    private bool boostActive;
+    private Coroutine boostRoutine;
+    private bool isInsideCornerTrigger;
+    private bool cornerBoostTriggered;
+    private bool previousDriftInputHeld;
 
     private InputSystem_Actions input;
     private Rigidbody rb;
@@ -58,6 +72,7 @@ public class PlayerController : MonoBehaviour
     {
         input = new InputSystem_Actions();
         rb = GetComponent<Rigidbody>();
+        currentMaxSpeed = normalSpeed;
 
         if (car != null)
         {
@@ -79,6 +94,78 @@ public class PlayerController : MonoBehaviour
         {
             input.Disable();
         }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        // Entering a corner trigger prepares the boost request for the next drift release.
+        if (!IsCornerTrigger(other))
+        {
+            return;
+        }
+
+        isInsideCornerTrigger = true;
+        cornerBoostTriggered = false;
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        // Leaving the trigger cancels the pending corner boost request.
+        if (!IsCornerTrigger(other))
+        {
+            return;
+        }
+
+        isInsideCornerTrigger = false;
+        cornerBoostTriggered = false;
+    }
+
+    public void TriggerBoost()
+    {
+        // This is the shared entry point for future boost sources such as corner trigger zones.
+        if (boostActive || boostRoutine != null)
+        {
+            return;
+        }
+
+        boostActive = true;
+        boostRoutine = StartCoroutine(BoostRoutine());
+    }
+
+    private IEnumerator BoostRoutine()
+    {
+        // Ramp up to the boosted speed smoothly.
+        float elapsed = 0f;
+        while (elapsed < rampUpTime)
+        {
+            float t = rampUpTime > 0f ? elapsed / rampUpTime : 1f;
+            currentMaxSpeed = Mathf.Lerp(normalSpeed, boostSpeed, t);
+            currentSpeed = Mathf.Clamp(currentSpeed, -currentMaxSpeed, currentMaxSpeed);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        currentMaxSpeed = boostSpeed;
+        currentSpeed = Mathf.Clamp(currentSpeed, -currentMaxSpeed, currentMaxSpeed);
+
+        // Hold the boosted speed briefly.
+        yield return new WaitForSeconds(boostHoldTime);
+
+        // Ramp back down to the normal speed smoothly.
+        elapsed = 0f;
+        while (elapsed < rampDownTime)
+        {
+            float t = rampDownTime > 0f ? elapsed / rampDownTime : 1f;
+            currentMaxSpeed = Mathf.Lerp(boostSpeed, normalSpeed, t);
+            currentSpeed = Mathf.Clamp(currentSpeed, -currentMaxSpeed, currentMaxSpeed);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        currentMaxSpeed = normalSpeed;
+        currentSpeed = Mathf.Clamp(currentSpeed, -currentMaxSpeed, currentMaxSpeed);
+        boostActive = false;
+        boostRoutine = null;
     }
 
     private void Update()
@@ -110,6 +197,13 @@ public class PlayerController : MonoBehaviour
         steering = input.Player.Steer.ReadValue<float>();
         bool driftInputHeld = input.Player.Drift.IsPressed();
 
+        if (previousDriftInputHeld && !driftInputHeld)
+        {
+            TryTriggerCornerBoost();
+        }
+
+        previousDriftInputHeld = driftInputHeld;
+
         UpdateSpeed(isAccelerating, isReversing);
 
         if (velocityDirection == Vector3.zero)
@@ -126,7 +220,7 @@ public class PlayerController : MonoBehaviour
         currentFrontAxelSteerAngle = Mathf.Lerp(currentFrontAxelSteerAngle, targetSteeringAngle, steeringSmoothing * Time.deltaTime);
 
         float steeringPercent = currentFrontAxelSteerAngle / maxTurnAngle;
-        float speedRatio = maxSpeed > 0f ? Mathf.Clamp01(speedMagnitude / maxSpeed) : 0f;
+        float speedRatio = currentMaxSpeed > 0f ? Mathf.Clamp01(speedMagnitude / currentMaxSpeed) : 0f;
 
         float steeringAuthority = 1f;
         if (speedRatio < steeringCurveStart)
@@ -273,8 +367,33 @@ public class PlayerController : MonoBehaviour
             // Debug.Log(rb.linearVelocity);
         }
 
-        rb.linearVelocity = Vector3.ClampMagnitude(rb.linearVelocity, maxSpeed);
+        rb.linearVelocity = Vector3.ClampMagnitude(rb.linearVelocity, currentMaxSpeed);
 
+    }
+
+    private void TryTriggerCornerBoost()
+    {
+        // Only trigger a corner boost if the player was drifting and has just released the drift input while inside the zone.
+        if (!isInsideCornerTrigger || cornerBoostTriggered || input == null)
+        {
+            return;
+        }
+
+        bool driftInputHeld = input.Player.Drift.IsPressed();
+        bool wasDriftingBeforeRelease = currentDriftState == DRIFT_STATE.Holding;
+
+        if (!wasDriftingBeforeRelease || driftInputHeld)
+        {
+            return;
+        }
+
+        cornerBoostTriggered = true;
+        TriggerBoost();
+    }
+
+    private bool IsCornerTrigger(Collider other)
+    {
+        return !string.IsNullOrEmpty(cornerTriggerTag) && other.CompareTag(cornerTriggerTag);
     }
 
     private void ApplyCarRotation()
@@ -305,6 +424,6 @@ public class PlayerController : MonoBehaviour
         else
             currentSpeed = Mathf.MoveTowards(currentSpeed, 0f, deceleration * Time.deltaTime);
 
-        currentSpeed = Mathf.Clamp(currentSpeed, -maxSpeed, maxSpeed);
+        currentSpeed = Mathf.Clamp(currentSpeed, -currentMaxSpeed, currentMaxSpeed);
     }
 }
