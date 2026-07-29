@@ -55,25 +55,23 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private CarBoost carBoost;
     [SerializeField] private CarHeat carHeat;
     [SerializeField] private CarEffects carEffects;
-
-    private Rigidbody rb;
+    [SerializeField] private CarGrounding carGrounding;
 
     public event Action OnOverheated;
     public event Action OnRecoveredFromOverheat;
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody>();
-
         carInput = GetOrAddComponent(carInput);
         carMovement = GetOrAddComponent(carMovement);
         carDrift = GetOrAddComponent(carDrift);
         carBoost = GetOrAddComponent(carBoost);
         carHeat = GetOrAddComponent(carHeat);
         carEffects = GetOrAddComponent(carEffects);
+        carGrounding = GetOrAddComponent(carGrounding);
 
         carInput.Initialize();
-        carMovement.Initialize(transform, rb, acceleration, deceleration, normalSpeed, maxTurnSpeed,
+        carMovement.Initialize(transform, acceleration, deceleration, normalSpeed, maxTurnSpeed,
             maxTurnAngle, steeringSmoothing, steeringCurveStart, steeringCurveEnd, grip, maxGrip);
         carDrift.Initialize(driftStartSpeed, driftSteeringStrength, driftAngleMultiplier,
             driftCounterSteerReduction, driftGripReduction, carRotationLerpSpeed, carRotationMaxAngle);
@@ -153,8 +151,6 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        UpdateDebugText();
-
         CarInput.Frame inputFrame = carInput.ReadInput();
         carBoost.UpdateDriftRelease(inputFrame.DriftHeld);
         carMovement.UpdateSpeed(inputFrame.Accelerating, inputFrame.Reversing);
@@ -166,39 +162,20 @@ public class PlayerController : MonoBehaviour
         carDrift.UpdateDrift(inputFrame.DriftHeld, inputFrame.Steering, carMovement.CurrentSpeed,
             carEffects.CurrentCarRotationAngle);
         carEffects.ApplyCarRotation(carDrift.TargetCarRotationAngle);
-    }
-
-    private void FixedUpdate()
-    {
-        carMovement.ClampRigidbodyVelocity();
+        carGrounding.UpdateGrounding(Time.deltaTime);
+        UpdateDebugText();
     }
 
     private void UpdateDebugText()
     {
-        Vector3 movementDirection = transform.forward;
-        movementDirection.y = 0f;
-
-        if (movementDirection.sqrMagnitude > 0.0001f)
-        {
-            movementDirection.Normalize();
-        }
-        else
-        {
-            movementDirection = Vector3.forward;
-        }
-
-        float signedSpeed = Vector3.Dot(rb.linearVelocity, movementDirection);
-
         debugText.text =
             "RC Car Debug Values:\n" +
             $"\nRotation: {transform.eulerAngles}" +
             $"\nPosition: {transform.position}\n" +
-            $"Velocity: {rb.linearVelocity}\n" +
             $"Speed: {carMovement.CurrentSpeed:F4}\n" +
-            $"Angular: {rb.angularVelocity}\n" +
-            $"Sleeping: {rb.IsSleeping()}" +
-            $"SignedSpeed: {signedSpeed}\n" +
-            "Terrain: N/A\n" +
+            $"Grounded: {carGrounding.IsGrounded}\n" +
+            $"Ground Normal: {carGrounding.GroundNormal}\n" +
+            $"Vertical Velocity: {carGrounding.VerticalVelocity:F4}\n" +
             $"Steering: {carInput.Steering}\n" +
             $"Current Drift State: {carDrift.State}\n" +
             $"Heat: {carHeat.CurrentHeat}\n" +

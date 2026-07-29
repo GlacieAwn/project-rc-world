@@ -3,7 +3,6 @@ using UnityEngine;
 public class CarMovement : MonoBehaviour
 {
     private Transform carTransform;
-    private Rigidbody rb;
     private float acceleration;
     private float deceleration;
     private float maxTurnSpeed;
@@ -19,12 +18,11 @@ public class CarMovement : MonoBehaviour
     public float CurrentMaxSpeed { get; private set; }
     public float CurrentFrontAxelSteerAngle { get; private set; }
 
-    public void Initialize(Transform transformReference, Rigidbody rigidbody, float accelerationValue,
+    public void Initialize(Transform transformReference, float accelerationValue,
         float decelerationValue, float normalSpeed, float turnSpeed, float turnAngle,
         float smoothing, float curveStart, float curveEnd, float gripValue, float maxGripValue)
     {
         carTransform = transformReference;
-        rb = rigidbody;
         acceleration = accelerationValue;
         deceleration = decelerationValue;
         CurrentMaxSpeed = normalSpeed;
@@ -66,11 +64,14 @@ public class CarMovement : MonoBehaviour
     {
         if (velocityDirection == Vector3.zero)
         {
-            velocityDirection = carTransform.forward;
+            // Grounding owns vertical movement. Keep drive motion on the world
+            // horizontal plane even when the vehicle is visually tilted on a slope.
+            velocityDirection = Vector3.ProjectOnPlane(carTransform.forward, Vector3.up).normalized;
         }
 
         float gripRate = grip * maxGrip;
-        velocityDirection = Vector3.Slerp(velocityDirection, carTransform.forward, gripRate * Time.deltaTime);
+        Vector3 flatForward = Vector3.ProjectOnPlane(carTransform.forward, Vector3.up).normalized;
+        velocityDirection = Vector3.Slerp(velocityDirection, flatForward, gripRate * Time.deltaTime);
         carTransform.position += velocityDirection * CurrentSpeed * Time.deltaTime;
 
         float speedMagnitude = Mathf.Abs(CurrentSpeed);
@@ -96,26 +97,6 @@ public class CarMovement : MonoBehaviour
         {
             carTransform.Rotate(0f, steeringTurn * maxTurnSpeed * Time.deltaTime, 0f);
         }
-    }
-
-    public void ClampRigidbodyVelocity()
-    {
-        if (rb == null)
-        {
-            return;
-        }
-
-        Vector3 currentVelocity = rb.linearVelocity;
-        Vector3 horizontalVelocity = new Vector3(currentVelocity.x, 0f, currentVelocity.z);
-
-        if (horizontalVelocity.magnitude < 0.04f)
-        {
-            currentVelocity.x = 0f;
-            currentVelocity.z = 0f;
-            rb.linearVelocity = currentVelocity;
-        }
-
-        rb.linearVelocity = Vector3.ClampMagnitude(rb.linearVelocity, CurrentMaxSpeed);
     }
 
     private float CalculateSteeringAuthority(float speedRatio)
