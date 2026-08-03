@@ -73,15 +73,10 @@ public class PlayerController : MonoBehaviour
         carEffects = GetOrAddComponent(carEffects);
 
         carInput.Initialize();
-        carMovement.Initialize(transform, rb, acceleration, deceleration, normalSpeed, maxTurnSpeed,
-            maxTurnAngle, steeringSmoothing, steeringCurveStart, steeringCurveEnd, grip, maxGrip);
-        carDrift.Initialize(driftStartSpeed, driftSteeringStrength, driftAngleMultiplier,
-            driftCounterSteerReduction, driftGripReduction, carRotationLerpSpeed, carRotationMaxAngle);
-        carBoost.Initialize(normalSpeed, boostSpeed, rampUpTime, boostHoldTime, rampDownTime,
-            cornerTriggerTag, carMovement, carDrift);
-        carHeat.Initialize(maxHeat, currentHeat, heatGeneration, passiveCooling,
-            accelerationHeatModifier, driftHeatModifier, boostHeatModifier,
-            decelerationCoolingModifier, overheated);
+        carMovement.Initialize(transform, rb, acceleration, deceleration, normalSpeed, maxTurnSpeed,maxTurnAngle, steeringSmoothing, steeringCurveStart, steeringCurveEnd, grip, maxGrip);
+        carDrift.Initialize(driftStartSpeed, driftSteeringStrength, driftAngleMultiplier,driftCounterSteerReduction, driftGripReduction, carRotationLerpSpeed, carRotationMaxAngle);
+        carBoost.Initialize(normalSpeed, boostSpeed, rampUpTime, boostHoldTime, rampDownTime,cornerTriggerTag, carMovement, carDrift);
+        carHeat.Initialize(maxHeat, currentHeat, heatGeneration, passiveCooling,accelerationHeatModifier, driftHeatModifier, boostHeatModifier,decelerationCoolingModifier, overheated);
         carEffects.Initialize(frontAxel, rearAxel, car, axleSpinMultiplier, carRotationLerpSpeed);
 
         carHeat.OnOverheated += HandleOverheated;
@@ -158,13 +153,10 @@ public class PlayerController : MonoBehaviour
         CarInput.Frame inputFrame = carInput.ReadInput();
         carBoost.UpdateDriftRelease(inputFrame.DriftHeld);
         carMovement.UpdateSpeed(inputFrame.Accelerating, inputFrame.Reversing);
-        carHeat.UpdateHeat(inputFrame.Accelerating, inputFrame.Reversing, carMovement.CurrentSpeed,
-            carDrift.IsHolding, carBoost.IsActive);
-        carMovement.UpdateMovement(inputFrame.Steering, carDrift.IsHolding, carDrift.Direction,
-            carDrift.CounterSteerReduction, carDrift.SteeringStrength);
+        carHeat.UpdateHeat(inputFrame.Accelerating, inputFrame.Reversing, carMovement.CurrentSpeed, carDrift.IsHolding, carBoost.IsActive);
+        carMovement.UpdateMovement(inputFrame.Steering, carDrift.IsHolding, carDrift.Direction, carDrift.CounterSteerReduction, carDrift.SteeringStrength);
         carEffects.UpdateAxles(carMovement.CurrentSpeed, carMovement.CurrentFrontAxelSteerAngle);
-        carDrift.UpdateDrift(inputFrame.DriftHeld, inputFrame.Steering, carMovement.CurrentSpeed,
-            carEffects.CurrentCarRotationAngle);
+        carDrift.UpdateDrift(inputFrame.DriftHeld, inputFrame.Steering, carMovement.CurrentSpeed, carEffects.CurrentCarRotationAngle);
         carEffects.ApplyCarRotation(carDrift.TargetCarRotationAngle);
     }
 
