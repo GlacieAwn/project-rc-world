@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    /// <summary>
+    /// Coordinates overall player movement.
+    /// Handles initialization and updates of secondary components.
+    /// </summary>
     [Header("Movement")]
     [SerializeField] private float acceleration = 8f;
     [SerializeField] private float deceleration = 12f;
