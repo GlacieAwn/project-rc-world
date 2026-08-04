@@ -1,4 +1,5 @@
 using System;
+using TMPro;
 using UnityEngine;
 
 public class RaceManager : MonoBehaviour
@@ -7,8 +8,12 @@ public class RaceManager : MonoBehaviour
     /// Coordinates the overall race lifecycle.
     /// Transitions between race states and notifies other systems.
     /// </summary>
+
+
     [SerializeField] private RaceState raceState;
-    
+    [SerializeField] private TMP_Text debugText;
+
+
     public enum RaceState
     {
         Waiting,
@@ -16,6 +21,7 @@ public class RaceManager : MonoBehaviour
         Racing,
         Finished
     }
+    // public RaceState currentState => raceState;
 
     public Action OnCountdownStarted;
     public Action OnRaceStarted;
@@ -33,12 +39,12 @@ public class RaceManager : MonoBehaviour
         
     }
 
-    private bool RaceStarted()
+    private bool StartRace()
     {   
         return true;
     }
 
-    private bool RaceFinished()
+    private bool FinishRace()
     {   
         return true;
     }
@@ -46,5 +52,10 @@ public class RaceManager : MonoBehaviour
     private bool SetState(RaceState newState)
     {   
         return true;
+    }
+
+    private void UpdateDebugText()
+    {
+        // TODO: Print Debug Text to the screen later
     }
 }
