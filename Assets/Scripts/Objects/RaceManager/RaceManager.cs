@@ -56,6 +56,8 @@ public class RaceManager : MonoBehaviour
 
     private void UpdateDebugText()
     {
-        // TODO: Print Debug Text to the screen later
+        debugText.text =
+        "Race Manager Values:\n" +
+        $"currentState: {raceState}";
     }
 }
