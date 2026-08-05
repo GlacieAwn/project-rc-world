@@ -34,6 +34,11 @@ public class RaceManager : MonoBehaviour
 		raceState = RaceState.Waiting;
 	}
 
+    void Update()
+    {
+        UpdateDebugText();
+    }
+
     private void BeginCountdown()
     {
         
