@@ -15,6 +15,7 @@ public class RaceManager : MonoBehaviour
     [SerializeField] private RaceState raceState;
     [SerializeField] private TMP_Text debugText;
     [SerializeField] private float currentTime = 0f;
+    [SerializeField] private CarMovement playerMovement;
 
 
     public enum RaceState
@@ -41,6 +42,11 @@ public class RaceManager : MonoBehaviour
 	void Awake()
 	{
 		OnRaceStateChanged += HandleRaceStateChanged;
+
+		if (playerMovement == null)
+		{
+			playerMovement = FindObjectOfType<CarMovement>();
+		}
 	}
 
     void Update()
@@ -89,16 +95,30 @@ public class RaceManager : MonoBehaviour
         {
             case RaceState.Countdown:
                 BeginCountdown();
+                SetPlayerMovementEnabled(false);
                 break;
 
             case RaceState.Racing:
                 StartRace();
+                SetPlayerMovementEnabled(true);
                 break;
 
             case RaceState.Finished:
                 FinishRace();
+                SetPlayerMovementEnabled(false);
+                // TODO: take control from the player and follow the spline.
                 break;
         }
+    }
+
+    private void SetPlayerMovementEnabled(bool enabled)
+    {
+        if (playerMovement == null)
+        {
+            return;
+        }
+
+        playerMovement.SetMovementEnabled(enabled);
     }
 
     private void UpdateDebugText()

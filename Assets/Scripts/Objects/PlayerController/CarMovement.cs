@@ -18,6 +18,7 @@ public class CarMovement : MonoBehaviour
     public float CurrentSpeed { get; private set; }
     public float CurrentMaxSpeed { get; private set; }
     public float CurrentFrontAxelSteerAngle { get; private set; }
+    public bool HasMovement { get; private set; } = true;
 
     public void Initialize(Transform transformReference, Rigidbody rigidbody, float accelerationValue,
         float decelerationValue, float normalSpeed, float turnSpeed, float turnAngle,
@@ -41,6 +42,11 @@ public class CarMovement : MonoBehaviour
     {
         CurrentMaxSpeed = maxSpeed;
         CurrentSpeed = Mathf.Clamp(CurrentSpeed, -CurrentMaxSpeed, CurrentMaxSpeed);
+    }
+
+    public void SetMovementEnabled(bool enabled)
+    {
+        HasMovement = enabled;
     }
 
     public void UpdateSpeed(bool accelerating, bool reversing)
@@ -71,7 +77,6 @@ public class CarMovement : MonoBehaviour
 
         float gripRate = grip * maxGrip;
         velocityDirection = Vector3.Slerp(velocityDirection, carTransform.forward, gripRate * Time.deltaTime);
-        carTransform.position += velocityDirection * CurrentSpeed * Time.deltaTime;
 
         float speedMagnitude = Mathf.Abs(CurrentSpeed);
         float targetSteeringAngle = Mathf.Clamp(steering, -1f, 1f) * maxTurnAngle;
@@ -92,9 +97,18 @@ public class CarMovement : MonoBehaviour
             steeringTurn = driftDirection * Mathf.Clamp01(driftInfluence * driftSteeringStrength * steeringAuthority);
         }
 
-        if (speedMagnitude > 0.0001f)
+        if (HasMovement)
         {
-            carTransform.Rotate(0f, steeringTurn * maxTurnSpeed * Time.deltaTime, 0f);
+            carTransform.position += velocityDirection * CurrentSpeed * Time.deltaTime;
+
+            if (speedMagnitude > 0.0001f)
+            {
+                carTransform.Rotate(0f, steeringTurn * maxTurnSpeed * Time.deltaTime, 0f);
+            }
+        }
+        else if (CurrentSpeed < 0f)
+        {
+            CurrentSpeed = 0f;
         }
     }
 
