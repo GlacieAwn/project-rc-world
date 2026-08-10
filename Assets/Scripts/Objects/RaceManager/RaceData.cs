@@ -2,11 +2,11 @@ using UnityEngine;
 
 public class RaceData
 {
-	public int CurrentLap;
-    public int CurrentCheckpoint;
-    public int CurrentPlace;
+	public int currentLap;
+    public int currentCheckpoint;
+    public int currentPlace;
 
-    public float CurrentTime;
+    public float currentTime;
 
-    public bool Finished;
+    public bool finished;
 }

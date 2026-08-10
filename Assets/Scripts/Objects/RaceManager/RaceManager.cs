@@ -14,7 +14,6 @@ public class RaceManager : MonoBehaviour
 
     [SerializeField] private RaceState raceState;
     [SerializeField] private TMP_Text debugText;
-    [SerializeField] private float currentTime = 0f;
     [SerializeField] private CarMovement playerMovement;
 
 
@@ -33,6 +32,7 @@ public class RaceManager : MonoBehaviour
     public Action<RaceState, RaceState> OnRaceStateChanged;
 
     private TimeSpan time;
+    private RaceData raceData;
 
     void Start()
     {
@@ -45,18 +45,20 @@ public class RaceManager : MonoBehaviour
 
 		if (playerMovement == null)
 		{
-			playerMovement = FindObjectOfType<CarMovement>();
+			playerMovement = FindAnyObjectByType<CarMovement>();
 		}
+
+        raceData = new RaceData();
 	}
 
     void Update()
     {
-        time = TimeSpan.FromSeconds(currentTime);
+        time = TimeSpan.FromSeconds(raceData.currentTime);
         
 
         if(raceState == RaceState.Racing)
         {
-            currentTime += Time.deltaTime;
+            raceData.currentTime += Time.deltaTime;
         }
 
         UpdateDebugText();
@@ -69,7 +71,7 @@ public class RaceManager : MonoBehaviour
 
     private bool StartRace()
     {
-        currentTime = 0f;
+        raceData.currentTime = 0f;
         return true;
     }
 
@@ -128,7 +130,11 @@ public class RaceManager : MonoBehaviour
         debugText.text =
         "Race Manager Values:\n" +
         $"currentState: {raceState}\n" +
-        $"currentTime:{time.Minutes:00}:{time.Seconds:00}.{hundredths:00}";
+        $"currentLap: {raceData.currentLap}\n" +
+        $"currentCheckpoint: {raceData.currentCheckpoint}\n" + 
+        $"currentPlace: {raceData.currentPlace}\n" +
+        $"finished: {raceData.finished}\n" +
+        $"currentTime: {time.Minutes:00}:{time.Seconds:00}.{hundredths:00}\n";
     }
 
     IEnumerator countdown()
