@@ -2,15 +2,21 @@ using UnityEngine;
 
 public class CheckpointManager : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    private Vector3 previousCheckpointPos;
+    private RaceData raceData;
+
+    void Awake()
     {
-        
+        raceData = new RaceData();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+	public void OnTriggerEnter(Collider other)
+	{
+        if (other.CompareTag("Checkpoint"))
+        {
+            Debug.Log("Checkpoint Passed!");
+            raceData.currentCheckpoint += 1;
+            previousCheckpointPos = other.transform.position;
+        }
+	}
 }

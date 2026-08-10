@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - Corner
+  - Checkpoint
   layers:
   - Default
   - TransparentFX
