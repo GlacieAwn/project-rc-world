@@ -49,6 +49,7 @@ public class RaceManager : MonoBehaviour
 		}
 
         raceData = new RaceData();
+
 	}
 
     void Update()
