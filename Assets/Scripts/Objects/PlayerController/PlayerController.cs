@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    /// <summary>
+    /// Coordinates overall player movement.
+    /// Handles initialization and updates of secondary components.
+    /// </summary>
     [Header("Movement")]
     [SerializeField] private float acceleration = 8f;
     [SerializeField] private float deceleration = 12f;
@@ -26,6 +30,15 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float driftAngleMultiplier = 2f;
     [SerializeField] private float driftCounterSteerReduction = 0.5f;
     [SerializeField] private float driftGripReduction = 0.35f;
+
+    [Header("Slope Management")]
+    [SerializeField] private LayerMask groundLayer = ~0;
+    [SerializeField] private float groundRayLength = 0.1f;
+    [SerializeField] private float groundRayStartHeight = 0f;
+    [SerializeField] private float slopeRotationSpeed = 8f;
+    [SerializeField] private float slopePositionSpeed = 10f;
+    [SerializeField] private float groundClearance = 0.5f;
+    [SerializeField] private float maxSlopeAngle = 45f;
 
     [Header("Boost Trigger")]
     [SerializeField] private string cornerTriggerTag = "Corner";
@@ -55,6 +68,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private CarBoost carBoost;
     [SerializeField] private CarHeat carHeat;
     [SerializeField] private CarEffects carEffects;
+    [SerializeField] private CheckpointManager checkpointManager;
+    [SerializeField] private LapManager lapManager;
 
     private Rigidbody rb;
 
@@ -71,17 +86,16 @@ public class PlayerController : MonoBehaviour
         carBoost = GetOrAddComponent(carBoost);
         carHeat = GetOrAddComponent(carHeat);
         carEffects = GetOrAddComponent(carEffects);
+        checkpointManager = GetOrAddComponent(checkpointManager);
+        lapManager = GetOrAddComponent(lapManager);
 
         carInput.Initialize();
-        carMovement.Initialize(transform, rb, acceleration, deceleration, normalSpeed, maxTurnSpeed,
-            maxTurnAngle, steeringSmoothing, steeringCurveStart, steeringCurveEnd, grip, maxGrip);
-        carDrift.Initialize(driftStartSpeed, driftSteeringStrength, driftAngleMultiplier,
-            driftCounterSteerReduction, driftGripReduction, carRotationLerpSpeed, carRotationMaxAngle);
-        carBoost.Initialize(normalSpeed, boostSpeed, rampUpTime, boostHoldTime, rampDownTime,
-            cornerTriggerTag, carMovement, carDrift);
-        carHeat.Initialize(maxHeat, currentHeat, heatGeneration, passiveCooling,
-            accelerationHeatModifier, driftHeatModifier, boostHeatModifier,
-            decelerationCoolingModifier, overheated);
+        carMovement.Initialize(transform, rb, acceleration, deceleration, normalSpeed, maxTurnSpeed, maxTurnAngle,
+            steeringSmoothing, steeringCurveStart, steeringCurveEnd, grip, maxGrip, groundLayer,
+            groundRayLength, groundRayStartHeight, slopeRotationSpeed, slopePositionSpeed, groundClearance, maxSlopeAngle);
+        carDrift.Initialize(driftStartSpeed, driftSteeringStrength, driftAngleMultiplier,driftCounterSteerReduction, driftGripReduction, carRotationLerpSpeed, carRotationMaxAngle);
+        carBoost.Initialize(normalSpeed, boostSpeed, rampUpTime, boostHoldTime, rampDownTime,cornerTriggerTag, carMovement, carDrift);
+        carHeat.Initialize(maxHeat, currentHeat, heatGeneration, passiveCooling,accelerationHeatModifier, driftHeatModifier, boostHeatModifier,decelerationCoolingModifier, overheated);
         carEffects.Initialize(frontAxel, rearAxel, car, axleSpinMultiplier, carRotationLerpSpeed);
 
         carHeat.OnOverheated += HandleOverheated;
@@ -124,6 +138,8 @@ public class PlayerController : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         carBoost.OnTriggerEnter(other);
+        checkpointManager.OnTriggerEnter(other);
+        lapManager.OnTriggerEnter(other);
     }
 
     private void OnTriggerExit(Collider other)
@@ -153,19 +169,20 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        UpdateDebugText();
-
         CarInput.Frame inputFrame = carInput.ReadInput();
         carBoost.UpdateDriftRelease(inputFrame.DriftHeld);
         carMovement.UpdateSpeed(inputFrame.Accelerating, inputFrame.Reversing);
-        carHeat.UpdateHeat(inputFrame.Accelerating, inputFrame.Reversing, carMovement.CurrentSpeed,
-            carDrift.IsHolding, carBoost.IsActive);
-        carMovement.UpdateMovement(inputFrame.Steering, carDrift.IsHolding, carDrift.Direction,
-            carDrift.CounterSteerReduction, carDrift.SteeringStrength);
+        carHeat.UpdateHeat(inputFrame.Accelerating, inputFrame.Reversing, carMovement.CurrentSpeed, carDrift.IsHolding, carBoost.IsActive);
+        carMovement.UpdateMovement(inputFrame.Steering, carDrift.IsHolding, carDrift.Direction, carDrift.CounterSteerReduction, carDrift.SteeringStrength);
         carEffects.UpdateAxles(carMovement.CurrentSpeed, carMovement.CurrentFrontAxelSteerAngle);
-        carDrift.UpdateDrift(inputFrame.DriftHeld, inputFrame.Steering, carMovement.CurrentSpeed,
-            carEffects.CurrentCarRotationAngle);
+        carDrift.UpdateDrift(inputFrame.DriftHeld, inputFrame.Steering, carMovement.CurrentSpeed, carEffects.CurrentCarRotationAngle);
         carEffects.ApplyCarRotation(carDrift.TargetCarRotationAngle);
+
+        if (debugText != null)
+        {
+            UpdateDebugText();
+        }
+
     }
 
     private void FixedUpdate()
@@ -175,6 +192,9 @@ public class PlayerController : MonoBehaviour
 
     private void UpdateDebugText()
     {
+        Vector3 rigidbodyVelocity = rb != null ? rb.linearVelocity : Vector3.zero;
+        Vector3 angularVelocity = rb != null ? rb.angularVelocity : Vector3.zero;
+        bool isSleeping = rb != null && rb.IsSleeping();
         Vector3 movementDirection = transform.forward;
         movementDirection.y = 0f;
 
@@ -187,18 +207,20 @@ public class PlayerController : MonoBehaviour
             movementDirection = Vector3.forward;
         }
 
-        float signedSpeed = Vector3.Dot(rb.linearVelocity, movementDirection);
+        float signedSpeed = Vector3.Dot(rigidbodyVelocity, movementDirection);
 
         debugText.text =
             "RC Car Debug Values:\n" +
             $"\nRotation: {transform.eulerAngles}" +
             $"\nPosition: {transform.position}\n" +
-            $"Velocity: {rb.linearVelocity}\n" +
+            $"Velocity: {rigidbodyVelocity}\n" +
             $"Speed: {carMovement.CurrentSpeed:F4}\n" +
-            $"Angular: {rb.angularVelocity}\n" +
-            $"Sleeping: {rb.IsSleeping()}" +
+            $"Angular: {angularVelocity}\n" +
+            $"Sleeping: {isSleeping}\n" +
             $"SignedSpeed: {signedSpeed}\n" +
-            "Terrain: N/A\n" +
+            $"Grounded: {carMovement.IsGrounded}\n" +
+            $"Slope Angle: {carMovement.SlopeAngle:F1}\n" +
+            $"Ground Normal: {carMovement.GroundNormal}\n" +
             $"Steering: {carInput.Steering}\n" +
             $"Current Drift State: {carDrift.State}\n" +
             $"Heat: {carHeat.CurrentHeat}\n" +
@@ -214,4 +236,6 @@ public class PlayerController : MonoBehaviour
     {
         OnRecoveredFromOverheat?.Invoke();
     }
+
+	
 }
