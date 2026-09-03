@@ -59,6 +59,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private CarBoost carBoost;
     [SerializeField] private CarHeat carHeat;
     [SerializeField] private CarEffects carEffects;
+    [SerializeField] private CarSlopeManagement carSlopeManagement;
     [SerializeField] private CheckpointManager checkpointManager;
     [SerializeField] private LapManager lapManager;
 
@@ -77,6 +78,7 @@ public class PlayerController : MonoBehaviour
         carBoost = GetOrAddComponent(carBoost);
         carHeat = GetOrAddComponent(carHeat);
         carEffects = GetOrAddComponent(carEffects);
+        carSlopeManagement = GetOrAddComponent(carSlopeManagement);
         checkpointManager = GetOrAddComponent(checkpointManager);
         lapManager = GetOrAddComponent(lapManager);
 
@@ -86,6 +88,7 @@ public class PlayerController : MonoBehaviour
         carBoost.Initialize(normalSpeed, boostSpeed, rampUpTime, boostHoldTime, rampDownTime,cornerTriggerTag, carMovement, carDrift);
         carHeat.Initialize(maxHeat, currentHeat, heatGeneration, passiveCooling,accelerationHeatModifier, driftHeatModifier, boostHeatModifier,decelerationCoolingModifier, overheated);
         carEffects.Initialize(frontAxel, rearAxel, car, axleSpinMultiplier, carRotationLerpSpeed);
+        carSlopeManagement.Initialize(transform);
 
         carHeat.OnOverheated += HandleOverheated;
         carHeat.OnRecoveredFromOverheat += HandleRecoveredFromOverheat;
@@ -158,6 +161,7 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        carSlopeManagement.UpdateSlope();
         UpdateDebugText();
 
         CarInput.Frame inputFrame = carInput.ReadInput();
@@ -200,7 +204,8 @@ public class PlayerController : MonoBehaviour
             $"Angular: {rb.angularVelocity}\n" +
             $"Sleeping: {rb.IsSleeping()}" +
             $"SignedSpeed: {signedSpeed}\n" +
-            "Terrain: N/A\n" +
+            $"Ground Normal: {carSlopeManagement.GroundNormal}\n" +
+            $"Ground Distance: {carSlopeManagement.GroundDistance:F4}\n" +
             $"Steering: {carInput.Steering}\n" +
             $"Current Drift State: {carDrift.State}\n" +
             $"Heat: {carHeat.CurrentHeat}\n" +

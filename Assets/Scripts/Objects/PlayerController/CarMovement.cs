@@ -80,8 +80,7 @@ public class CarMovement : MonoBehaviour
 
         float speedMagnitude = Mathf.Abs(CurrentSpeed);
         float targetSteeringAngle = Mathf.Clamp(steering, -1f, 1f) * maxTurnAngle;
-        CurrentFrontAxelSteerAngle = Mathf.Lerp(CurrentFrontAxelSteerAngle, targetSteeringAngle,
-            steeringSmoothing * Time.deltaTime);
+        CurrentFrontAxelSteerAngle = Mathf.Lerp(CurrentFrontAxelSteerAngle, targetSteeringAngle, steeringSmoothing * Time.deltaTime);
         float steeringPercent = CurrentFrontAxelSteerAngle / maxTurnAngle;
         float speedRatio = CurrentMaxSpeed > 0f ? Mathf.Clamp01(speedMagnitude / CurrentMaxSpeed) : 0f;
         float steeringAuthority = CalculateSteeringAuthority(speedRatio);
@@ -92,8 +91,7 @@ public class CarMovement : MonoBehaviour
         {
             float driftSteeringAmount = Mathf.Clamp01(Mathf.Abs(steering));
             float driftSteeringSign = Mathf.Abs(steering) > 0.001f ? Mathf.Sign(steering) : 0f;
-            float driftInfluence = driftSteeringSign == driftDirection ? driftSteeringAmount :
-                -driftSteeringAmount * counterSteerReduction;
+            float driftInfluence = driftSteeringSign == driftDirection ? driftSteeringAmount : -driftSteeringAmount * counterSteerReduction;
             steeringTurn = driftDirection * Mathf.Clamp01(driftInfluence * driftSteeringStrength * steeringAuthority);
         }
 
