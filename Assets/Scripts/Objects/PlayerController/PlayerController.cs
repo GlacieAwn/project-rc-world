@@ -31,6 +31,15 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float driftCounterSteerReduction = 0.5f;
     [SerializeField] private float driftGripReduction = 0.35f;
 
+    [Header("Slope Management")]
+    [SerializeField] private LayerMask groundLayer = ~0;
+    [SerializeField] private float groundRayLength = 0.1f;
+    [SerializeField] private float groundRayStartHeight = 0f;
+    [SerializeField] private float slopeRotationSpeed = 8f;
+    [SerializeField] private float slopePositionSpeed = 10f;
+    [SerializeField] private float groundClearance = 0.5f;
+    [SerializeField] private float maxSlopeAngle = 45f;
+
     [Header("Boost Trigger")]
     [SerializeField] private string cornerTriggerTag = "Corner";
 
@@ -81,7 +90,9 @@ public class PlayerController : MonoBehaviour
         lapManager = GetOrAddComponent(lapManager);
 
         carInput.Initialize();
-        carMovement.Initialize(transform, rb, acceleration, deceleration, normalSpeed, maxTurnSpeed,maxTurnAngle, steeringSmoothing, steeringCurveStart, steeringCurveEnd, grip, maxGrip);
+        carMovement.Initialize(transform, rb, acceleration, deceleration, normalSpeed, maxTurnSpeed, maxTurnAngle,
+            steeringSmoothing, steeringCurveStart, steeringCurveEnd, grip, maxGrip, groundLayer,
+            groundRayLength, groundRayStartHeight, slopeRotationSpeed, slopePositionSpeed, groundClearance, maxSlopeAngle);
         carDrift.Initialize(driftStartSpeed, driftSteeringStrength, driftAngleMultiplier,driftCounterSteerReduction, driftGripReduction, carRotationLerpSpeed, carRotationMaxAngle);
         carBoost.Initialize(normalSpeed, boostSpeed, rampUpTime, boostHoldTime, rampDownTime,cornerTriggerTag, carMovement, carDrift);
         carHeat.Initialize(maxHeat, currentHeat, heatGeneration, passiveCooling,accelerationHeatModifier, driftHeatModifier, boostHeatModifier,decelerationCoolingModifier, overheated);
@@ -166,6 +177,12 @@ public class PlayerController : MonoBehaviour
         carEffects.UpdateAxles(carMovement.CurrentSpeed, carMovement.CurrentFrontAxelSteerAngle);
         carDrift.UpdateDrift(inputFrame.DriftHeld, inputFrame.Steering, carMovement.CurrentSpeed, carEffects.CurrentCarRotationAngle);
         carEffects.ApplyCarRotation(carDrift.TargetCarRotationAngle);
+
+        if (debugText != null)
+        {
+            UpdateDebugText();
+        }
+
     }
 
     private void FixedUpdate()
@@ -175,6 +192,9 @@ public class PlayerController : MonoBehaviour
 
     private void UpdateDebugText()
     {
+        Vector3 rigidbodyVelocity = rb != null ? rb.linearVelocity : Vector3.zero;
+        Vector3 angularVelocity = rb != null ? rb.angularVelocity : Vector3.zero;
+        bool isSleeping = rb != null && rb.IsSleeping();
         Vector3 movementDirection = transform.forward;
         movementDirection.y = 0f;
 
@@ -187,18 +207,20 @@ public class PlayerController : MonoBehaviour
             movementDirection = Vector3.forward;
         }
 
-        float signedSpeed = Vector3.Dot(rb.linearVelocity, movementDirection);
+        float signedSpeed = Vector3.Dot(rigidbodyVelocity, movementDirection);
 
         debugText.text =
             "RC Car Debug Values:\n" +
             $"\nRotation: {transform.eulerAngles}" +
             $"\nPosition: {transform.position}\n" +
-            $"Velocity: {rb.linearVelocity}\n" +
+            $"Velocity: {rigidbodyVelocity}\n" +
             $"Speed: {carMovement.CurrentSpeed:F4}\n" +
-            $"Angular: {rb.angularVelocity}\n" +
-            $"Sleeping: {rb.IsSleeping()}" +
+            $"Angular: {angularVelocity}\n" +
+            $"Sleeping: {isSleeping}\n" +
             $"SignedSpeed: {signedSpeed}\n" +
-            "Terrain: N/A\n" +
+            $"Grounded: {carMovement.IsGrounded}\n" +
+            $"Slope Angle: {carMovement.SlopeAngle:F1}\n" +
+            $"Ground Normal: {carMovement.GroundNormal}\n" +
             $"Steering: {carInput.Steering}\n" +
             $"Current Drift State: {carDrift.State}\n" +
             $"Heat: {carHeat.CurrentHeat}\n" +

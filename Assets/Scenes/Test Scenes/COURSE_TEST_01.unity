@@ -1017,6 +1017,10 @@ PrefabInstance:
       propertyPath: target
       value: 
       objectReference: {fileID: 1546040353755533854}
+    - target: {fileID: 3976818653034566606, guid: 2fac0ef87236847f5b3d9819fbe456a9, type: 3}
+      propertyPath: smoothTime
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5264614506657728716, guid: 2fac0ef87236847f5b3d9819fbe456a9, type: 3}
       propertyPath: m_LocalPosition.x
       value: 7.59
@@ -1082,6 +1086,18 @@ PrefabInstance:
       propertyPath: debugText
       value: 
       objectReference: {fileID: 1693778622}
+    - target: {fileID: 4679835666031500228, guid: 671b5c12e5ba840a4810f46afe947322, type: 3}
+      propertyPath: groundClearance
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4679835666031500228, guid: 671b5c12e5ba840a4810f46afe947322, type: 3}
+      propertyPath: groundRayLength
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4679835666031500228, guid: 671b5c12e5ba840a4810f46afe947322, type: 3}
+      propertyPath: groundRayStartHeight
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5656245058451322008, guid: 671b5c12e5ba840a4810f46afe947322, type: 3}
       propertyPath: m_LocalPosition.x
       value: 6.37
