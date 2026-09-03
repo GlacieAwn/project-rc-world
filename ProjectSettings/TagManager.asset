@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Corner
   - Checkpoint
+  - Finish Line
   layers:
   - Default
   - TransparentFX

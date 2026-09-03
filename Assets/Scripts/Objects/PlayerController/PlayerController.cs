@@ -60,6 +60,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private CarHeat carHeat;
     [SerializeField] private CarEffects carEffects;
     [SerializeField] private CheckpointManager checkpointManager;
+    [SerializeField] private LapManager lapManager;
 
     private Rigidbody rb;
 
@@ -77,6 +78,7 @@ public class PlayerController : MonoBehaviour
         carHeat = GetOrAddComponent(carHeat);
         carEffects = GetOrAddComponent(carEffects);
         checkpointManager = GetOrAddComponent(checkpointManager);
+        lapManager = GetOrAddComponent(lapManager);
 
         carInput.Initialize();
         carMovement.Initialize(transform, rb, acceleration, deceleration, normalSpeed, maxTurnSpeed,maxTurnAngle, steeringSmoothing, steeringCurveStart, steeringCurveEnd, grip, maxGrip);
@@ -126,6 +128,7 @@ public class PlayerController : MonoBehaviour
     {
         carBoost.OnTriggerEnter(other);
         checkpointManager.OnTriggerEnter(other);
+        lapManager.OnTriggerEnter(other);
     }
 
     private void OnTriggerExit(Collider other)
