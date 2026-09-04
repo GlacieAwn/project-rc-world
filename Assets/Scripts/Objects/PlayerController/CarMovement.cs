@@ -188,19 +188,19 @@ public class CarMovement : MonoBehaviour
             groundPoint = hit.point;
             slopeAngle = Vector3.Angle(groundNormal, Vector3.up);
             isGrounded = slopeAngle <= maxSlopeAngle;
-            Debug.Log(
-                $"Ground Ray Hit | Origin: {rayOrigin} | Direction: {rayDirection} | Length: {groundRayLength:F2} | " +
-                $"Collider: {hit.collider.name} | Point: {hit.point} | Normal: {hit.normal} | " +
-                $"Slope Angle: {slopeAngle:F2}");
+            // Debug.Log(
+            //     $"Ground Ray Hit | Origin: {rayOrigin} | Direction: {rayDirection} | Length: {groundRayLength:F2} | " +
+            //     $"Collider: {hit.collider.name} | Point: {hit.point} | Normal: {hit.normal} | " +
+            //     $"Slope Angle: {slopeAngle:F2}");
             return;
         }
 
         isGrounded = false;
         groundNormal = Vector3.up;
         slopeAngle = 0f;
-        Debug.Log(
-            $"Ground Ray Miss | Origin: {rayOrigin} | Direction: {rayDirection} | Length: {groundRayLength:F2} | " +
-            "Collider: None | Point: N/A | Normal: N/A | Slope Angle: N/A");
+        // Debug.Log(
+        //     $"Ground Ray Miss | Origin: {rayOrigin} | Direction: {rayDirection} | Length: {groundRayLength:F2} | " +
+        //     "Collider: None | Point: N/A | Normal: N/A | Slope Angle: N/A");
     }
 
     private Vector3 ProjectDirectionOntoGround(Vector3 direction)

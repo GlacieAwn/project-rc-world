@@ -6,11 +6,21 @@ public class CheckpointManager : MonoBehaviour
     private int cooldown;
     private Vector3 previousCheckpointPos;
     private RaceData raceData;
+    [SerializeField] private RaceManager raceManager;
 
     void Awake()
     {
-        raceData = new RaceData();
-        cooldown = 20;
+        cooldown = 100;
+    }
+
+    void Start()
+    {
+        if (raceManager == null)
+        {
+            raceManager = FindAnyObjectByType<RaceManager>();
+        }
+
+        raceData = raceManager != null ? raceManager.RaceData : null;
     }
 
 	void Update()
@@ -18,7 +28,7 @@ public class CheckpointManager : MonoBehaviour
 		cooldown -= 1;
         if(cooldown <= 0)
         {
-            cooldown = 20;
+            cooldown = 100;
         }
 	}
 
@@ -26,6 +36,12 @@ public class CheckpointManager : MonoBehaviour
 	{
         if (other.CompareTag("Checkpoint"))
         {
+            if (raceData == null)
+            {
+                Debug.LogError("CheckpointManager requires a RaceManager with RaceData.");
+                return;
+            }
+
             Debug.Log("Checkpoint Passed!");
             Debug.Log("CurrentCheckpoint: " + currentCheckpoint);
             Debug.Log("CurrentRaceDataCheckpoint: " + raceData.currentCheckpoint);

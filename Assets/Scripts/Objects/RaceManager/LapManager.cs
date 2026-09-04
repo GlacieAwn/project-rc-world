@@ -4,31 +4,52 @@ public class LapManager : MonoBehaviour
 {
     private int cooldown;
     private RaceData raceData;
+    [SerializeField] private RaceManager raceManager;
 
     void Awake()
     {
-        raceData = new RaceData();
-        cooldown = 20;
+        cooldown = 100;
+    }
+
+    void Start()
+    {
+        if (raceManager == null)
+        {
+            raceManager = FindAnyObjectByType<RaceManager>();
+        }
+
+        raceData = raceManager != null ? raceManager.RaceData : null;
     }
 
 	void Update()
-	{
-		cooldown -= 1;
-        if(cooldown <= 0)
+    {
+        if (cooldown > 0)
         {
-            cooldown = 20;
+            cooldown -= 1;
         }
-	}
+    }
 
-	public void OnTriggerEnter(Collider other)
-	{
-        if(other.CompareTag("Finish Line"))
+public void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Finish Line"))
         {
-            if(cooldown >= 0)
+            if (raceData == null)
             {
-                Debug.Log("Lap Incremented!");
-                raceData.currentLap += 1;   
+                Debug.LogError("LapManager requires a RaceManager with RaceData.");
+                return;
             }
+
+            if (cooldown > 0)
+            {
+                return;
+            }
+
+            Debug.Log("Lap Incremented!");
+            Debug.Log($"Lap Number: {raceData.currentLap}");
+            Debug.Log($"Checkpoint trigger: {other.name} | {other.transform.root.name}");
+
+            raceData.currentLap += 1;
+            cooldown = 100;
         }
-	}
+    }
 }

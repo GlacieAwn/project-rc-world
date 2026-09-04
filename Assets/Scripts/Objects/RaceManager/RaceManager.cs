@@ -34,6 +34,8 @@ public class RaceManager : MonoBehaviour
     private TimeSpan time;
     private RaceData raceData;
 
+    public RaceData RaceData => raceData;
+
     void Start()
     {
         SetState(RaceState.Countdown);
